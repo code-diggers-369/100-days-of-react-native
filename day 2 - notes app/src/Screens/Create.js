@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import FontAwesome5Icons from 'react-native-vector-icons/FontAwesome5';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Create() {
@@ -16,6 +16,7 @@ export default function Create() {
   const [description, setDescription] = useState('');
 
   const navigation = useNavigation();
+  const {params} = useRoute();
 
   const handleSave = async () => {
     try {
@@ -33,6 +34,7 @@ export default function Create() {
 
         await AsyncStorage.setItem('notesData', JSON.stringify(tempArray));
 
+        params.onSave();
         navigation.goBack();
       }
     } catch (err) {

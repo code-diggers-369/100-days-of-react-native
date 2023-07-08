@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import FontAwesome5Icons from 'react-native-vector-icons/FontAwesome5';
 import {MasonryGridView} from 'react-native-masonry-gridview';
@@ -20,11 +21,12 @@ export default function Home() {
 
   const navigation = useNavigation();
 
-  navigation.addListener('focus', () => {
+  useEffect(() => {
     initAppData().then(() => {
       fetchData();
     });
-  });
+    return () => {};
+  }, []);
 
   const initAppData = async () => {
     try {
@@ -37,14 +39,16 @@ export default function Home() {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const storageData = JSON.parse(await AsyncStorage.getItem('notesData'));
-      setCardsData(storageData);
+      if (storageData) {
+        setCardsData(storageData);
+      }
     } catch (err) {
       console.log(err);
     }
-  };
+  });
 
   const handleRemoveCardItem = async cardId => {
     const storageData = JSON.parse(await AsyncStorage.getItem('notesData'));
@@ -86,7 +90,7 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
-      <View>
+      <ScrollView>
         <MasonryGridView
           items={cardsData.filter(item => {
             const {title, description, cretedAt} = item;
@@ -133,12 +137,16 @@ export default function Home() {
             There Is No Data
           </Text>
         )}
-      </View>
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.addButtonContainer}
         onPress={() => {
-          navigation.navigate('Create');
+          navigation.navigate('Create', {
+            onSave: () => {
+              fetchData();
+            },
+          });
         }}>
         <FontAwesome5Icons name="plus" size={15} />
       </TouchableOpacity>
